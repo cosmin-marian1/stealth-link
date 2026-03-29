@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AES-128 Secure Link (Dark Fixed)</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <div id="usb-alert">⚠️ DEVICE DISCONNECTED</div>
+
+    <div id="overlay-screen">
+        <div class="logo">STEALTH LINK TERMINAL</div>
+        
+        <div id="conn-buttons" class="conn-container">
+            <button id="btnUsb" class="btn btn-usb">CONNECT USB CABLE</button>
+            <button id="btnBle" class="btn btn-ble">CONNECT BLUETOOTH</button>
+        </div>
+        
+        <div id="statusText">Select connection method</div>
+
+        <div id="setupForm" class="box">
+            <h3 style="text-align:center; color:var(--text); margin-bottom:20px;">Identity Setup</h3>
+            <label>CALLSIGN (Max 7 Chars)</label> <input type="text" id="setupUser" maxlength="7" placeholder="Ex: Ghost">
+            <label>ENCRYPTION KEY (Exactly 16 Chars)</label> <input type="password" id="setupKey" maxlength="16" placeholder="1234567890123456">
+            <label>SESSION PASSWORD</label> <input type="password" id="setupPass" placeholder="Local Lock">
+            <label>ROLE</label> 
+            <select id="setupRole">
+                <option value="0">Node A (Commander)</option>
+                <option value="1">Node B (Unit)</option>
+            </select>
+            <button id="saveConfigBtn" class="btn">BURN CONFIGURATION</button>
+        </div>
+
+        <div id="loginForm" class="box">
+            <h3 style="text-align:center; color:var(--text); margin-bottom:10px;">Session Locked</h3>
+            <p style="text-align:center; color:var(--text-muted); font-size:12px; margin-bottom:20px;">Enter session password.</p>
+            <label>PASSWORD</label> <input type="password" id="loginPass">
+            <div id="loginError" class="error-msg">Incorrect Password</div>
+            <button id="unlockBtn" class="btn">UNLOCK</button>
+            <button id="wipeBtn">Wipe Data</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="status-container">
+            <span id="myIdentity" class="my-identity">Offline</span>
+            <div class="partner-status">
+                <div id="connDot" class="dot"></div>
+                <span id="partnerName">Target: Disconnected</span>
+            </div>
+        </div>
+        <button id="lockBtn">LOCK</button>
+    </header>
+
+    <div id="chat-window"></div>
+
+    <div id="input-area" class="disabled">
+        <input type="text" id="msgInput" placeholder="Encrypted message..." maxlength="23" autocomplete="off">
+        <button id="sendBtn">➤</button>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
