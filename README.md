@@ -1,6 +1,6 @@
 # 📡 StealthLink: AES-128 Secure RF Terminal
 
-![Version](https://img.shields.io/badge/version-2.6-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0-blue.svg)
 ![Hardware](https://img.shields.io/badge/hardware-ESP32--C3%20%7C%20nRF24L01%2B%20PA%2FLNA-orange.svg)
 ![Power](https://img.shields.io/badge/power-Li--Ion%20%2B%205V%20Boost-red.svg)
 ![Security](https://img.shields.io/badge/security-AES--128-green.svg)
@@ -27,7 +27,7 @@ The system is composed of three interconnected layers:
 To build a fully portable "Node" (two are required for a network), you need the following components.
 
 Here is a look at the final assembled node, compact and ready for deployment:
-![StealthLink Complete Build](https://i.imgur.com/vHqB3qQ.jpeg)
+![StealthLink Complete Build](https://github.com/user-attachments/assets/14989b69-b24b-4d82-af5d-c361202e370e)
 
 ### Core Electronics
 * **Microcontroller:** ESP32-C3 SuperMini.
@@ -40,7 +40,7 @@ Here is a look at the final assembled node, compact and ready for deployment:
 * **Step-Up Converter:** A DC-DC Boost Converter to step up the 3.7V from the battery to a stable 5V.
 
 Here is a close-up of the battery and TP4056 charging module:
-![Battery and TP4056 Charger](https://i.imgur.com/R8g0w1x.jpeg)
+![Battery and TP4056 Charger](https://github.com/user-attachments/assets/df6174a1-4b35-4183-ae86-75a863f4dbb2)
 
 ---
 
