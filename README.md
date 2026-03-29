@@ -1,12 +1,12 @@
 # 📡 StealthLink: AES-128 Secure RF Terminal
 
-![Version](https://img.shields.io/badge/version-1.0-blue.svg)
-![Hardware](https://img.shields.io/badge/hardware-ESP32--C3%20%7C%20nRF24L01%2B-orange.svg)
+![Version](https://img.shields.io/badge/version-2.6-blue.svg)
+![Hardware](https://img.shields.io/badge/hardware-ESP32--C3%20%7C%20nRF24L01%2B%20PA%2FLNA-orange.svg)
+![Power](https://img.shields.io/badge/power-Li--Ion%20%2B%205V%20Boost-red.svg)
 ![Security](https://img.shields.io/badge/security-AES--128-green.svg)
-![Status](https://img.shields.io/badge/status-Active-success.svg)
 
 ## 1. Overview
-**StealthLink** is an "off-the-grid" text messaging terminal, completely independent of the internet and cellular networks. The system uses 2.4GHz radio waves with hardware amplification for medium to long-range transmissions (up to 1-2 km in open space).
+**StealthLink** is an "off-the-grid" text messaging terminal, completely independent of the internet and cellular networks. The system uses 2.4GHz radio waves with hardware amplification (PA/LNA) for medium to long-range transmissions (up to 1-2 km in open space).
 
 Security is guaranteed through military-grade **AES-128** encryption executed directly on the microcontroller, ensuring total confidentiality of intercepted packets. User interaction is handled via a modern web interface (PWA) over **Bluetooth Low Energy (BLE)** or a **USB Serial** cable.
 
@@ -24,21 +24,49 @@ The system is composed of three interconnected layers:
 
 ## 3. Hardware Requirements
 
-To build a single "Node" (two are required for a network), you need the following:
+To build a fully portable "Node" (two are required for a network), you need the following components.
 
-* **Microcontroller:** ESP32-C3 SuperMini (chosen for its compact size and native BLE/WiFi support).
-* **Radio Module (Long Range):** nRF24L01+ PA/LNA (the black version featuring an external SMA antenna and power amplifier).
-* **Voltage Adapter (Shield):** nRF24L01 breakout adapter with an AMS1117 regulator (essential for providing the ~115mA current required during transmission).
-* **Power Supply:** USB-C cable connected to a Powerbank or laptop.
+Here is a look at the final assembled node, compact and ready for deployment:
+![StealthLink Complete Build](https://i.imgur.com/vHqB3qQ.jpeg)
 
-### Wiring Schema (Pinout)
+### Core Electronics
+* **Microcontroller:** ESP32-C3 SuperMini.
+* **Radio Module (Long Range):** nRF24L01+ PA/LNA (the black version with an external antenna).
+* **Voltage Adapter (Shield):** nRF24L01 breakout adapter with AMS1117 regulator.
+
+### Wireless Power Pack (Portable Setup)
+* **Battery:** 3.7V Li-Ion Battery (e.g., 18650 or flat LiPo pack).
+* **Charger/Protection:** TP4056 Lithium Battery Charger module with a protection circuit.
+* **Step-Up Converter:** A DC-DC Boost Converter to step up the 3.7V from the battery to a stable 5V.
+
+Here is a close-up of the battery and TP4056 charging module:
+![Battery and TP4056 Charger](https://i.imgur.com/R8g0w1x.jpeg)
+
+---
+
+## 4. Wiring Schema (Portable Configuration)
+
+The system is powered by the 3.7V Li-Ion battery, managed by the TP4056 module. The output is then fed into a DC-DC Boost Converter to ensure a stable 5V supply. This 5V line powers both the ESP32 and the nRF24 Shield, ensuring maximum stability during high-power radio transmissions.
+
+### 4.1 Power Distribution
+
+| From Component | Pin | To Component | Pin | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Battery** | **(+)** | **TP4056** | **B+** | |
+| **Battery** | **(-)** | **TP4056** | **B-** | |
+| **TP4056** | **OUT+**| **DC-DC Boost** | **IN+** | |
+| **TP4056** | **OUT-**| **DC-DC Boost** | **IN-** | |
+| **DC-DC Boost**| **OUT+**| **ESP32-C3** | **5V / VBUS**| Also goes to **nRF24 Shield VCC**. |
+| **DC-DC Boost**| **OUT-**| **ESP32-C3** | **GND** | Also goes to **nRF24 Shield GND**. |
+
+### 4.2 Data Communication (ESP32 $\leftrightarrow$ Radio Shield)
 
 > **⚠️ IMPORTANT:** Plug the radio module into the Shield. Wire the pins from the Shield to the ESP32-C3 exactly as shown below.
 
 | Shield (Adapter) Pin | ESP32-C3 Pin | Function | Notes |
 | :--- | :--- | :--- | :--- |
-| **GND** | **GND** | Ground | Connect to any GND pin. |
-| **VCC** | **5V** / **VBUS**| Power | **Crucial:** The adapter requires 5V to stabilize the 3.3V output! |
+| **GND** | **GND** | Ground | Connected via DC-DC OUT-. |
+| **VCC** | **5V / VBUS**| Power | Connected via DC-DC OUT+. |
 | **CE** | **6** | Chip Enable | Controls RX/TX state of the radio. |
 | **CSN** | **7** | Chip Select | Selects the module on the SPI bus. |
 | **SCK** | **4** | Serial Clock | SPI data synchronization. |
@@ -47,38 +75,32 @@ To build a single "Node" (two are required for a network), you need the followin
 
 ---
 
-## 4. Critical Hardware Warnings ⚠️
+## 5. Critical Hardware Warnings ⚠️
 
 1.  **The Antenna Rule:** **NEVER** power the nRF24L01+ PA/LNA module without the external antenna securely screwed on. The power generated by the amplifier (PA) will reflect back into the chip and destroy it instantly.
-2.  **C++ Power Settings:** To utilize the maximum range of the PA/LNA module, ensure the power level is set to max in your Arduino code (`setup()` function): `radio.setPALevel(RF24_PA_MAX);`.
+2.  **Power Supply Stability:** The nRF24L01+ PA/LNA module is power-hungry (~115mA during transmission). The AMS1117 regulator on the shield requires at least 4.5V to output a clean 3.3V. **The DC-DC Boost converter is mandatory** in battery-operated setups to prevent brownouts and restarts when transmitting at `RF24_PA_MAX`.
 
 ---
 
-## 5. Software & Configuration
+## 6. Software & Configuration
 
 ### A. Microcontroller (C++)
-* **Development Environment:** Arduino IDE.
-* **Required Libraries:** `RF24` (by TMRh20), `mbedtls/aes.h` (native to ESP32), `BLEDevice.h`.
-* **Advanced Logic:** Features a custom "Garbage Collector" to strip residual characters from AES padding, and a "Heartbeat" system (invisible status pings sent every 1.5 seconds to track connection status).
+* **Environment:** Arduino IDE. Libraries: `RF24` (TMRh20), `mbedtls/aes.h` (native), `BLEDevice.h`.
+* **Logic:** Features "Garbage Collector" for AES padding issues and "Heartbeat" status pings every 1.5s.
 
 ### B. Frontend (UI)
-* **Hosting:** Requires HTTPS (e.g., Vercel) for Web Bluetooth API permissions to function.
-* **Handshake System:** On boot, the node must be configured via the UI with a *Callsign* and an *AES Key (16 characters)*. Keys must be strictly identical on both nodes.
-* **UI Security:** Features a "Local Lock" system with a session password to prevent unauthorized access if the phone is left unlocked.
+* **Hosting:** Requires HTTPS (e.g., Vercel) for BLE permissions.
+* **Security:** Callsign + AES Key Handshake. "Local Lock" session password.
 
 ---
 
-## 6. Quick Start Guide
+## 7. Quick Start Guide
 
-1.  **Preparation:** Screw on the antenna. Power up the ESP32.
-2.  **Access UI:** Open the StealthLink interface (Android via Chrome, iOS via the *Bluefy* app, PC via Chrome/Edge).
-3.  **Connect:** Select **BLE** (for mobile) or **USB** (for PC).
-4.  **Configure (Identity Setup):**
-    * Enter your desired CallSign.
-    * Set the AES Key (e.g., `StealthKey123456`).
-    * Assign one device as **Node A (Commander)** and the other as **Node B (Unit)**.
-    * Click "BURN CONFIGURATION".
-5.  **Communicate:** Wait for the partner's status indicator to turn green ("Online") and start your secure transmission.
+1.  **Preparation:** Screw on the antenna. Ensure the battery is charged. Turn on the power switch (if installed).
+2.  **Access UI:** Open StealthLink (Android/Chrome, iOS/Bluefy app).
+3.  **Connect:** Select **BLE** (mobile) or **USB** (PC).
+4.  **Configure:** Enter Callsign, AES Key (16 chars), assign Nodes (A/B), click "BURN CONFIGURATION".
+5.  **Communicate:** Wait for green status and start secure transmission.
 
 ---
 *Developed as an experimental secure RF communication system.*
